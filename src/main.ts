@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize Camera Kit
 async function initCameraKit() {
   try {
-     await fetchGeminiKey();
+     //await fetchGeminiKey();
     cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
     // Hide loader immediately and start splash fade-out

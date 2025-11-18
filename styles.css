@@ -279,11 +279,7 @@ body.splash-hidden::before {
     margin-bottom: 8px;
 }
 
-.mode-overlay__subtitle {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 28px;
-    font-size: 0.95rem;
-}
+
 
 .mode-overlay__actions {
     display: flex;
