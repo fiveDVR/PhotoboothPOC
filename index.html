@@ -7,8 +7,8 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, orientation=portrait">
   <title> Photobooth POC </title>
-  <script type="module" crossorigin src="/PhotoboothPOC/assets/index-D79agImO.js"></script>
-  <link rel="stylesheet" crossorigin href="/PhotoboothPOC/assets/index-BiUz17PN.css">
+  <script type="module" crossorigin src="/PhotoboothPOC/assets/index-Nqbbjf5G.js"></script>
+  <link rel="stylesheet" crossorigin href="/PhotoboothPOC/assets/index-DgYdzFfZ.css">
 </head>
 
 <body>
@@ -44,7 +44,6 @@
     <div id="mode-selection-overlay" class="mode-overlay" style="display: none;">
       <div class="mode-overlay__panel">
         <h2 class="mode-overlay__title">Choose Your Experience</h2>
-        <p class="mode-overlay__subtitle">Pick a mode to continue</p>
         <div class="mode-overlay__actions">
           <button id="mode-ar-btn" class="mode-overlay__btn mode-overlay__btn--ar">
             AR Mode
@@ -58,6 +57,13 @@
     <!-- Splash Loading GIF -->
     <div id="splash-loader">
       <img src="/PhotoboothPOC/assets/loading-BZDBN9Kl.gif" alt="Loading..." />
+    </div>
+    <!-- Loading Overlay (hidden by default) -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;" aria-hidden="true">
+      <div class="loading-panel" role="status" aria-live="polite">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loading-text">Processing your image<span class="loading-dots">...</span></div>
+      </div>
     </div>
   </div>
 </body>
