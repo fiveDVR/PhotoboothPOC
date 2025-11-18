@@ -2,7 +2,8 @@ import {
   bootstrapCameraKit,
   CameraKitSession,
   createMediaStreamSource,
-  Transform2D
+  Transform2D,
+  type Lens
 } from '@snap/camera-kit';
 import {
   GoogleGenerativeAI,
@@ -14,7 +15,6 @@ import { APP_CONFIG } from './AppConfig';
 
 let cameraKitSession: CameraKitSession;
 let mediaStream: MediaStream;
-let { LensesGroup }: any = {}; // Replace 'any' with the appropriate type if available
 const camerakitCanvas = document.getElementById('CameraKit-AR-Canvas') as HTMLCanvasElement;
 let captureBtn: HTMLButtonElement;
 let capturedImageData: string | null = null;
@@ -23,19 +23,32 @@ let closePreviewBtn: HTMLButtonElement;
 let sendToGeminiBtn: HTMLButtonElement;
 let isSendingToGemini = false;
 let geminiModel: GenerativeModel | null = null;
+let modeOverlay: HTMLDivElement;
+let arModeBtn: HTMLButtonElement;
+let aiModeBtn: HTMLButtonElement;
+let selectedMode: 'AR' | 'AI' | null = null;
+let currentLens: Lens;
+let cameraKit: any;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  setupModeSelectionUI();
   // Initialize Camera Kit
   await initCameraKit();
 })
 
 // Initialize Camera Kit
 async function initCameraKit() {
-  let loadedLensesCount: number = 0;
   try {
-    const cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
+    cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
-    { LensesGroup = await cameraKit.lensRepository.loadLensGroups([APP_CONFIG.LENS_GROUP_ID]) };
+    // Hide loader immediately and start splash fade-out
+    hideSplashLoader();
+    setCameraKitSource(cameraKitSession, true); // Use back camera for Image Target
+    setTimeout(() => {
+      setupCaptureUI();
+    }, 500);
+    //{ LensesGroup = await cameraKit.lensRepository.loadLensGroups([APP_CONFIG.LENS_GROUP_ID]) };
+    /*
     LensesGroup.lenses.forEach((lens: any) => {
       cameraKitSession.applyLens(lens).then(() => {
         loadedLensesCount++;
@@ -50,6 +63,7 @@ async function initCameraKit() {
         }
       });
     });
+  */
   } catch (error) {
     console.error('Failed to initialize CameraKit:', error);
   }
@@ -95,6 +109,7 @@ function hideSplashLoader() {
   const loader = document.getElementById('splash-loader');
   document.body.classList.add('splash-hidden');
   if (loader) loader.style.display = 'none';
+  showModeSelectionOverlay();
 }
 
 function capturePhoto() {
@@ -146,7 +161,7 @@ function ClosePreview() {
 }
 
 function DownloadImage() {
-if (capturedImageData) {
+  if (capturedImageData) {
     const a = document.createElement('a');
     a.href = capturedImageData;
     a.download = `photo-preview-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
@@ -285,4 +300,34 @@ function ensureGeminiModel(): GenerativeModel | null {
   }
 
   return geminiModel;
+}
+
+function setupModeSelectionUI() {
+  modeOverlay = document.getElementById('mode-selection-overlay') as HTMLDivElement;
+  arModeBtn = document.getElementById('mode-ar-btn') as HTMLButtonElement;
+  aiModeBtn = document.getElementById('mode-ai-btn') as HTMLButtonElement;
+
+  if (arModeBtn) arModeBtn.addEventListener('click', () => handleModeSelection('AR'));
+  if (aiModeBtn) aiModeBtn.addEventListener('click', () => handleModeSelection('AI'));
+}
+
+function showModeSelectionOverlay() {
+  if (!modeOverlay || selectedMode) return;
+  modeOverlay.style.display = 'flex';
+}
+
+function hideModeSelectionOverlay() {
+  if (!modeOverlay) return;
+  modeOverlay.style.display = 'none';
+}
+
+async function handleModeSelection(mode: 'AR' | 'AI') {
+  selectedMode = mode;
+  hideModeSelectionOverlay();
+  console.info(`Mode selected: ${mode}`);
+  if (mode === 'AR') {
+    currentLens = await cameraKit.lensRepository.loadLens(APP_CONFIG.LENS_ID, APP_CONFIG.LENS_GROUP_ID);
+    await cameraKitSession.applyLens(currentLens);
+
+  }
 }

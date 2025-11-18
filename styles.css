@@ -26,7 +26,7 @@ body::before {
     /* fallback */
     height: 100dvh;
     /* mobile browsers full viewport */
-    background: url('/Splash.png') center center no-repeat;
+    background: url('/Splash.jpg') center center no-repeat;
     background-size: cover;
     z-index: 2000;
     opacity: 1;
@@ -222,4 +222,79 @@ body.splash-hidden::before {
     display: block;
     background: black;
     z-index: 999;
+}
+
+.mode-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 15, 25, 0.85);
+    backdrop-filter: blur(7px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2002;
+    padding: 24px;
+}
+
+.mode-overlay__panel {
+    width: min(420px, 100%);
+    background: rgba(20, 28, 43, 0.95);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mode-overlay__title {
+    font-size: 1.6rem;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.mode-overlay__subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+}
+
+.mode-overlay__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (min-width: 480px) {
+    .mode-overlay__actions {
+        flex-direction: row;
+    }
+}
+
+.mode-overlay__btn {
+    flex: 1;
+    border: none;
+    border-radius: 999px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mode-overlay__btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.mode-overlay__btn:active {
+    transform: translateY(0);
+}
+
+.mode-overlay__btn--ar {
+    background: linear-gradient(135deg, #09c6f9, #045de9);
+}
+
+.mode-overlay__btn--ai {
+    background: linear-gradient(135deg, #ec008c, #fc6767);
 }
