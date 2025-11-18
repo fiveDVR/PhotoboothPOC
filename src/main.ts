@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize Camera Kit
 async function initCameraKit() {
   try {
-    // await fetchGeminiKey();
+     await fetchGeminiKey();
     cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
     // Hide loader immediately and start splash fade-out
@@ -50,23 +50,6 @@ async function initCameraKit() {
     setTimeout(() => {
       setupCaptureUI();
     }, 500);
-    //{ LensesGroup = await cameraKit.lensRepository.loadLensGroups([APP_CONFIG.LENS_GROUP_ID]) };
-    /*
-    LensesGroup.lenses.forEach((lens: any) => {
-      cameraKitSession.applyLens(lens).then(() => {
-        loadedLensesCount++;
-        if (loadedLensesCount === LensesGroup.lenses.length) {
-          console.log(`Loaded ${loadedLensesCount} lenses`);
-          // Hide loader immediately and start splash fade-out
-          hideSplashLoader();
-          setCameraKitSource(cameraKitSession, true); // Use back camera for Image Target
-          setTimeout(() => {
-            setupCaptureUI();
-          }, 500);
-        }
-      });
-    });
-  */
   } catch (error) {
     console.error('Failed to initialize CameraKit:', error);
   }
@@ -136,6 +119,7 @@ function capturePhoto() {
     // Hide capture button, show download and close buttons
     if (captureBtn) captureBtn.style.display = 'none';
     if (backBtn) backBtn.style.display = 'none';
+    if(selectedMode === 'AR')
     if (downloadImageBtn) downloadImageBtn.style.display = 'flex';
     if (closePreviewBtn) closePreviewBtn.style.display = 'flex';
     if (sendToGeminiBtn && selectedMode === 'AI') sendToGeminiBtn.style.display = 'flex';
@@ -170,7 +154,8 @@ function ClosePreview() {
   }
   // Show capture & Back buttons again
   if (captureBtn) captureBtn.style.display = 'flex';
-  if (backBtn) backBtn.style.display = 'flex';
+  if (selectedMode === 'AR')
+    if (backBtn) backBtn.style.display = 'flex';
 }
 
 function BackBtnClk() {
