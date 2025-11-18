@@ -7,8 +7,8 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, orientation=portrait">
   <title> Photobooth POC </title>
-  <script type="module" crossorigin src="/PhotoboothPOC/assets/index-C2XxKYGM.js"></script>
-  <link rel="stylesheet" crossorigin href="/PhotoboothPOC/assets/index-BlPMUnhr.css">
+  <script type="module" crossorigin src="/PhotoboothPOC/assets/index-D-sSDMpU.js"></script>
+  <link rel="stylesheet" crossorigin href="/PhotoboothPOC/assets/index-BwECARB0.css">
 </head>
 
 <body>
@@ -32,6 +32,26 @@
       <!-- Close Button (Hidden by default) -->
       <button id="close-btn" class="close-btn" style="display: none;">
       </button>
+
+      <!-- Send to Gemini Button (Hidden by default) -->
+      <button id="send-gemini-btn" class="send-gemini-btn" style="display: none;">
+        Send to Gemini
+      </button>
+    </div>
+    <!-- Mode selection overlay -->
+    <div id="mode-selection-overlay" class="mode-overlay" style="display: none;">
+      <div class="mode-overlay__panel">
+        <h2 class="mode-overlay__title">Choose Your Experience</h2>
+        <p class="mode-overlay__subtitle">Pick a mode to continue</p>
+        <div class="mode-overlay__actions">
+          <button id="mode-ar-btn" class="mode-overlay__btn mode-overlay__btn--ar">
+            AR Mode
+          </button>
+          <button id="mode-ai-btn" class="mode-overlay__btn mode-overlay__btn--ai">
+            AI Mode
+          </button>
+        </div>
+      </div>
     </div>
     <!-- Splash Loading GIF -->
     <div id="splash-loader">
