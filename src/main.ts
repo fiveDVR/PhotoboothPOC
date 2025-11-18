@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize Camera Kit
 async function initCameraKit() {
   try {
+    await fetchGeminiKey();
     cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
     // Hide loader immediately and start splash fade-out
@@ -81,6 +82,11 @@ function setupCaptureUI() {
   sendToGeminiBtn.addEventListener('click', sendImageToGemini);
 }
 
+async function fetchGeminiKey() {
+  const res = await fetch("https://orange-gem-api.vercel.app/api/get-key");
+  const data = await res.json();
+  console.log("Key from serverless:", data.key);
+}
 
 //@ts-ignore
 async function setCameraKitSource(
