@@ -102,6 +102,8 @@ body.splash-hidden::before {
     height: 60px;
     border-radius: 50%;
     background: url('/Capture-Btn.png') center center no-repeat;
+    background-size: cover;
+    background-color: transparent;
     border: none;
     cursor: pointer;
     display: flex;
@@ -125,8 +127,8 @@ body.splash-hidden::before {
     position: fixed;
     top: 30px;
     right: 30px;
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     background: url('/DownloadBtn.png') center center no-repeat;
     background-size: 80%;
@@ -152,8 +154,8 @@ body.splash-hidden::before {
     position: fixed;
     top: 30px;
     left: 30px;
-    width: 50px;
-    height: 50px;
+    width: 70px;        
+    height: 70px;
     border-radius: 50%;
     background: url('/CloseBtn.png') center center no-repeat;
     background-size: 80%;
@@ -171,6 +173,32 @@ body.splash-hidden::before {
 }
 
 .close-btn:active {
+    transform: scale(0.95);
+}
+/* Back Button Styling */
+.back-btn {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: url('/Back-Btn.png') center center no-repeat;
+    background-size: 80%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.back-btn:hover {
+    transform: scale(1.1);
+}
+
+.back-btn:active {
     transform: scale(0.95);
 }
 

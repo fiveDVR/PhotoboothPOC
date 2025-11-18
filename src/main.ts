@@ -26,6 +26,7 @@ let geminiModel: GenerativeModel | null = null;
 let modeOverlay: HTMLDivElement;
 let arModeBtn: HTMLButtonElement;
 let aiModeBtn: HTMLButtonElement;
+let backBtn: HTMLButtonElement;
 let selectedMode: 'AR' | 'AI' | null = null;
 let currentLens: Lens;
 let cameraKit: any;
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize Camera Kit
 async function initCameraKit() {
   try {
-    await fetchGeminiKey();
+    // await fetchGeminiKey();
     cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
     // Hide loader immediately and start splash fade-out
@@ -76,13 +77,15 @@ function setupCaptureUI() {
   downloadImageBtn = document.getElementById('download-btn') as HTMLButtonElement;
   closePreviewBtn = document.getElementById('close-btn') as HTMLButtonElement;
   sendToGeminiBtn = document.getElementById('send-gemini-btn') as HTMLButtonElement;
+  backBtn = document.getElementById('back-btn') as HTMLButtonElement;
   captureBtn.style.display = 'flex';
   captureBtn.addEventListener('click', capturePhoto);
   closePreviewBtn.addEventListener('click', ClosePreview);
   downloadImageBtn.addEventListener('click', DownloadImage);
   sendToGeminiBtn.addEventListener('click', sendImageToGemini);
+  backBtn.addEventListener('click', BackBtnClk);
 }
-
+//@ts-ignore
 async function fetchGeminiKey() {
   const res = await fetch("https://orange-gem-api.vercel.app/api/get-key");
   const data = await res.json();
@@ -132,9 +135,10 @@ function capturePhoto() {
 
     // Hide capture button, show download and close buttons
     if (captureBtn) captureBtn.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
     if (downloadImageBtn) downloadImageBtn.style.display = 'flex';
     if (closePreviewBtn) closePreviewBtn.style.display = 'flex';
-    if (sendToGeminiBtn) sendToGeminiBtn.style.display = 'flex';
+    if (sendToGeminiBtn && selectedMode === 'AI') sendToGeminiBtn.style.display = 'flex';
 
   } catch (error) {
     console.error('Failed to capture photo:', error);
@@ -164,8 +168,18 @@ function ClosePreview() {
     sendToGeminiBtn.disabled = false;
     sendToGeminiBtn.textContent = 'Send to Gemini';
   }
-  // Show capture button again
+  // Show capture & Back buttons again
   if (captureBtn) captureBtn.style.display = 'flex';
+  if (backBtn) backBtn.style.display = 'flex';
+}
+
+function BackBtnClk() {
+  if (selectedMode === 'AR') {
+    cameraKitSession.removeLens();
+    backBtn.style.display = 'none';
+    selectedMode = null;
+    showModeSelectionOverlay();
+  }
 }
 
 function DownloadImage() {
@@ -336,6 +350,6 @@ async function handleModeSelection(mode: 'AR' | 'AI') {
   if (mode === 'AR') {
     currentLens = await cameraKit.lensRepository.loadLens(APP_CONFIG.LENS_ID, APP_CONFIG.LENS_GROUP_ID);
     await cameraKitSession.applyLens(currentLens);
-
+    if (backBtn) backBtn.style.display = 'flex';
   }
 }
