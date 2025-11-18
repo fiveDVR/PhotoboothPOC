@@ -29,6 +29,7 @@ let aiModeBtn: HTMLButtonElement;
 let selectedMode: 'AR' | 'AI' | null = null;
 let currentLens: Lens;
 let cameraKit: any;
+let gfnb: any;
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupModeSelectionUI();
@@ -85,7 +86,8 @@ function setupCaptureUI() {
 async function fetchGeminiKey() {
   const res = await fetch("https://orange-gem-api.vercel.app/api/get-key");
   const data = await res.json();
-  console.log("Key from serverless:", data.key);
+  gfnb = data.key;
+  // console.log("Key from serverless:", data.key);
 }
 
 //@ts-ignore
@@ -242,7 +244,7 @@ async function sendImageToGemini() {
       ],
       generationConfig: {
         imageConfig: {
-          aspectRatio: '1:1'
+          aspectRatio: '9:16'
         },
         responseModalities: ['Image']
       }
@@ -294,12 +296,12 @@ function getInlineImageFromGemini(result: GenerateContentResponse | undefined): 
 }
 
 function ensureGeminiModel(): GenerativeModel | null {
-  if (!APP_CONFIG.GEMINI_API_KEY) {
+  if (!gfnb) {
     return null;
   }
 
   if (!geminiModel) {
-    const genAI = new GoogleGenerativeAI(APP_CONFIG.GEMINI_API_KEY);
+    const genAI = new GoogleGenerativeAI(gfnb);
     geminiModel = genAI.getGenerativeModel({
       model: APP_CONFIG.GEMINI_MODEL
     });

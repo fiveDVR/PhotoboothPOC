@@ -2,7 +2,6 @@ export const APP_CONFIG = {
     CAMERA_KIT_API_TOKEN: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzU2NDAyNDMwLCJzdWIiOiI1NzUwMjVjOS0xYjBlLTQ5ZjgtOWMzMy1mM2ZhN2M5ZDE0YTh-UFJPRFVDVElPTn41MDQ2Njc1Mi01N2MwLTQ5MGUtODc3MS1jYTA5NjNlZDIxNjEifQ.3sbRD47P17pMhnb3Sl5_12XA0xtSeBglslHFZNxr5r8',
     LENS_GROUP_ID: '2addf893-4a87-4ba8-b773-73b855f8aee3',
     LENS_ID: '7011bb37-f0d3-483d-afee-b2524dd6c948',
-    GEMINI_API_KEY: '',
     GEMINI_MODEL: 'gemini-2.5-flash-image',
-    GEMINI_IMAGE_PROMPT: 'Apply Gemini styling to this captured photo.'
+    GEMINI_IMAGE_PROMPT: 'A hyper-realistic high-resolution portrait of ME wearing an ancient Egyptian pharaonic outfit. The facial features must perfectly match the photo i have attached maintaining true identity and proportions. The man is fully dressed (not shirtless), with a regal pharaonic costume including elegant gold and deep turquoise details Dramatic cinematic lighting with realistic shadows and hyper-detailed with subtle hieroglyphs, warm golden tones, realistic perspective, and natural depth of field. The overall look must be like a real professional photographic portrait from a modern photoshoot but with a strong pharaonic theme. No additional accessories, no distortion, no cartoon style.'
 } as const;
