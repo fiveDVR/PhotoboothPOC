@@ -18,6 +18,7 @@
     "vite": "npm:rolldown-vite@7.1.14"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@snap/camera-kit": "^1.12.0"
   }
 }

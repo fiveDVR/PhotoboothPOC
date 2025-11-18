@@ -4,6 +4,12 @@ import {
   createMediaStreamSource,
   Transform2D
 } from '@snap/camera-kit';
+import {
+  GoogleGenerativeAI,
+  type GenerativeModel,
+  type GenerateContentResponse,
+  type GenerateContentRequest
+} from '@google/generative-ai';
 import { APP_CONFIG } from './AppConfig';
 
 let cameraKitSession: CameraKitSession;
@@ -14,6 +20,9 @@ let captureBtn: HTMLButtonElement;
 let capturedImageData: string | null = null;
 let downloadImageBtn: HTMLButtonElement;
 let closePreviewBtn: HTMLButtonElement;
+let sendToGeminiBtn: HTMLButtonElement;
+let isSendingToGemini = false;
+let geminiModel: GenerativeModel | null = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialize Camera Kit
@@ -50,10 +59,12 @@ function setupCaptureUI() {
   captureBtn = document.getElementById('capture-btn') as HTMLButtonElement;
   downloadImageBtn = document.getElementById('download-btn') as HTMLButtonElement;
   closePreviewBtn = document.getElementById('close-btn') as HTMLButtonElement;
+  sendToGeminiBtn = document.getElementById('send-gemini-btn') as HTMLButtonElement;
   captureBtn.style.display = 'flex';
   captureBtn.addEventListener('click', capturePhoto);
   closePreviewBtn.addEventListener('click', ClosePreview);
   downloadImageBtn.addEventListener('click', DownloadImage);
+  sendToGeminiBtn.addEventListener('click', sendImageToGemini);
 }
 
 
@@ -94,38 +105,13 @@ function capturePhoto() {
   try {
     // Capture the current canvas content
     capturedImageData = camerakitCanvas.toDataURL('image/png');
-    // Get the photo canvas and display the captured photo
-    const photoPreviewCanvas = document.getElementById('photo-preview-canvas') as HTMLCanvasElement;
-    if (photoPreviewCanvas) {
-      // Set canvas dimensions to match the captured image
-      photoPreviewCanvas.width = camerakitCanvas.width;
-      photoPreviewCanvas.height = camerakitCanvas.height;
-
-      // Get the 2D context and draw the captured photo
-      const ctx = photoPreviewCanvas.getContext('2d');
-      if (ctx) {
-        const img = new Image();
-        img.onload = () => {
-          // Clear the canvas and draw the captured image
-          ctx.clearRect(0, 0, photoPreviewCanvas.width, photoPreviewCanvas.height);
-          ctx.drawImage(img, 0, 0);
-
-          // Show the photo canvas, hide the main canvas
-          photoPreviewCanvas.style.display = 'block';
-          photoPreviewCanvas.style.width = '100%';
-          photoPreviewCanvas.style.height = '100%';
-          photoPreviewCanvas.style.objectFit = 'contain';
-          photoPreviewCanvas.style.position = 'absolute';  // Match live canvas positioning if it uses absolute
-          camerakitCanvas.style.display = 'none';
-        };
-        img.src = capturedImageData;
-      }
-    }
+    renderPreviewCanvas(capturedImageData);
 
     // Hide capture button, show download and close buttons
     if (captureBtn) captureBtn.style.display = 'none';
     if (downloadImageBtn) downloadImageBtn.style.display = 'flex';
     if (closePreviewBtn) closePreviewBtn.style.display = 'flex';
+    if (sendToGeminiBtn) sendToGeminiBtn.style.display = 'flex';
 
   } catch (error) {
     console.error('Failed to capture photo:', error);
@@ -150,7 +136,11 @@ function ClosePreview() {
 
   if (downloadImageBtn) downloadImageBtn.style.display = 'none';
   if (closePreviewBtn) closePreviewBtn.style.display = 'none';
-  ``
+  if (sendToGeminiBtn) {
+    sendToGeminiBtn.style.display = 'none';
+    sendToGeminiBtn.disabled = false;
+    sendToGeminiBtn.textContent = 'Send to Gemini';
+  }
   // Show capture button again
   if (captureBtn) captureBtn.style.display = 'flex';
 }
@@ -164,4 +154,135 @@ if (capturedImageData) {
     a.click();
     document.body.removeChild(a);
   }
+}
+
+function renderPreviewCanvas(imageData: string) {
+  const photoPreviewCanvas = document.getElementById('photo-preview-canvas') as HTMLCanvasElement;
+  if (!photoPreviewCanvas) {
+    console.warn('Photo preview canvas missing');
+    return;
+  }
+
+  photoPreviewCanvas.width = camerakitCanvas.width;
+  photoPreviewCanvas.height = camerakitCanvas.height;
+
+  const ctx = photoPreviewCanvas.getContext('2d');
+  if (!ctx) {
+    console.warn('Cannot get canvas context');
+    return;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, photoPreviewCanvas.width, photoPreviewCanvas.height);
+    ctx.drawImage(img, 0, 0, photoPreviewCanvas.width, photoPreviewCanvas.height);
+    photoPreviewCanvas.style.display = 'block';
+    photoPreviewCanvas.style.width = '100%';
+    photoPreviewCanvas.style.height = '100%';
+    photoPreviewCanvas.style.objectFit = 'contain';
+    photoPreviewCanvas.style.position = 'absolute';
+    camerakitCanvas.style.display = 'none';
+  };
+  img.src = imageData;
+}
+
+async function sendImageToGemini() {
+  if (!capturedImageData || !sendToGeminiBtn || isSendingToGemini) {
+    return;
+  }
+
+  const model = ensureGeminiModel();
+  if (!model) {
+    console.warn('Missing Gemini API key in APP_CONFIG');
+    alert('Add your Gemini API key to APP_CONFIG.GEMINI_API_KEY before sending the photo.');
+    return;
+  }
+
+  isSendingToGemini = true;
+  toggleGeminiButtonState(true, 'Sending…');
+
+  const base64Payload = capturedImageData.split(',')[1];
+
+  try {
+    const request = {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: APP_CONFIG.GEMINI_IMAGE_PROMPT },
+            {
+              inlineData: {
+                mimeType: 'image/png',
+                data: base64Payload
+              }
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        imageConfig: {
+          aspectRatio: '1:1'
+        },
+        responseModalities: ['Image']
+      }
+    } as unknown as GenerateContentRequest;
+
+    const result = await model.generateContent(request);
+
+    const processedImageBase64 = getInlineImageFromGemini(result.response);
+    if (processedImageBase64) {
+      const dataUrl = `data:image/png;base64,${processedImageBase64}`;
+      capturedImageData = dataUrl;
+      renderPreviewCanvas(dataUrl);
+      console.info('Gemini returned a processed image.');
+    } else {
+      console.info('Gemini response:', result);
+      alert('Gemini responded without an image. Check console for details.');
+    }
+  } catch (error) {
+    console.error('Failed to send image to Gemini:', error);
+    alert('Failed to send image to Gemini. Check console for details.');
+  } finally {
+    isSendingToGemini = false;
+    toggleGeminiButtonState(false, 'Send to Gemini');
+  }
+}
+
+function toggleGeminiButtonState(disabled: boolean, label: string) {
+  if (!sendToGeminiBtn) return;
+  sendToGeminiBtn.disabled = disabled;
+  sendToGeminiBtn.textContent = label;
+}
+
+function getInlineImageFromGemini(result: GenerateContentResponse | undefined): string | null {
+  const candidates = result?.candidates;
+  if (!Array.isArray(candidates)) return null;
+
+  for (const candidate of candidates) {
+    const parts = candidate?.content?.parts;
+    if (!Array.isArray(parts)) continue;
+
+    for (const part of parts) {
+      if (part?.inlineData?.data) {
+        return part.inlineData.data;
+      }
+    }
+  }
+
+  return null;
+}
+
+function ensureGeminiModel(): GenerativeModel | null {
+  if (!APP_CONFIG.GEMINI_API_KEY) {
+    return null;
+  }
+
+  if (!geminiModel) {
+    const genAI = new GoogleGenerativeAI(APP_CONFIG.GEMINI_API_KEY);
+    geminiModel = genAI.getGenerativeModel({
+      model: APP_CONFIG.GEMINI_MODEL
+    });
+  }
+
+  return geminiModel;
 }
