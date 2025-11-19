@@ -11,8 +11,7 @@ import {
   type GenerateContentResponse,
   type GenerateContentRequest
 } from '@google/generative-ai';
-import '@tensorflow/tfjs';
-import * as faceapi from 'face-api.js';
+import { GenderDetectionService } from './GenderDetectionService';
 import { APP_CONFIG } from './AppConfig';
 
 let cameraKitSession: CameraKitSession;
@@ -34,11 +33,8 @@ let selectedMode: 'AR' | 'AI' | null = null;
 let currentLens: Lens;
 let cameraKit: any;
 let gfnb: any;
-let faceApiModelsPromise: Promise<void> | null = null;
-let faceApiBackendPromise: Promise<void> | null = null;
-let faceApiEnvPatched = false;
-let tfFetchPatched = false;
 const FACE_API_MODEL_PATH = `${import.meta.env.BASE_URL}models`;
+const genderDetectionService = new GenderDetectionService(FACE_API_MODEL_PATH);
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupModeSelectionUI();
@@ -221,125 +217,8 @@ function renderPreviewCanvas(imageData: string) {
   img.src = imageData;
 }
 
-async function detectGenderFromCapture(imageData: string) {
-  try {
-    await ensureFaceApiModelsLoaded();
-    const img = await loadImageFromDataUrl(imageData);
-    const detectionCanvas = createDetectionCanvas(img);
-    const detections = await faceapi
-      .detectAllFaces(detectionCanvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.5 }))
-      .withAgeAndGender();
-
-    if (!detections.length) {
-      console.info('Gender detection: no faces detected.');
-      return;
-    }
-
-    detections.forEach((detection, index) => {
-      const probability = (detection.genderProbability * 100).toFixed(1);
-      console.info(`Gender detection [${index + 1}]: ${detection.gender} (${probability}%)`);
-    });
-  } catch (error) {
-    console.error('Gender detection failed:', error);
-  }
-}
-
-async function ensureFaceApiModelsLoaded() {
-  ensureFaceApiEnvPatched();
-  await ensureFaceApiBackendReady();
-  if (!faceApiModelsPromise) {
-    faceApiModelsPromise = Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(FACE_API_MODEL_PATH),
-      faceapi.nets.ageGenderNet.loadFromUri(FACE_API_MODEL_PATH)
-    ])
-      .then(() => {
-        console.info('face-api.js models loaded for gender detection.');
-      })
-      .catch((error) => {
-        faceApiModelsPromise = null;
-        throw error;
-      });
-  }
-  return faceApiModelsPromise;
-}
-
-function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = (error) => reject(error);
-    image.src = dataUrl;
-  });
-}
-
-function ensureFaceApiEnvPatched() {
-  if (faceApiEnvPatched) return;
-  const nativeFetch = window.fetch ? window.fetch.bind(window) : undefined;
-  if (!nativeFetch) {
-    console.warn('Browser fetch implementation missing; face-api.js may not load models correctly.');
-  }
-  try {
-    faceapi.env.monkeyPatch({
-      fetch: nativeFetch,
-      Canvas: HTMLCanvasElement,
-      Image: HTMLImageElement,
-      createCanvasElement: () => document.createElement('canvas'),
-      createImageElement: () => document.createElement('img')
-    });
-    faceApiEnvPatched = true;
-  } catch (error) {
-    console.warn('Failed to monkey patch face-api.js environment.', error);
-  }
-}
-
-async function ensureFaceApiBackendReady() {
-  ensureTfFetchPatched();
-  if (!faceApiBackendPromise) {
-    faceApiBackendPromise = (async () => {
-      try {
-        await faceapi.tf.setBackend('webgl');
-        await faceapi.tf.ready();
-      } catch (error) {
-        console.warn('WebGL backend init failed, falling back to CPU backend for face-api.js', error);
-        await faceapi.tf.setBackend('cpu');
-        await faceapi.tf.ready();
-      }
-    })().catch((error) => {
-      faceApiBackendPromise = null;
-      throw error;
-    });
-  }
-  return faceApiBackendPromise;
-}
-
-function createDetectionCanvas(img: HTMLImageElement): HTMLCanvasElement {
-  const MAX_INPUT = 512;
-  const largestDimension = Math.max(img.width, img.height) || 1;
-  const scale = largestDimension > MAX_INPUT ? MAX_INPUT / largestDimension : 1;
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(img.width * scale);
-  canvas.height = Math.round(img.height * scale);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Unable to obtain canvas context for gender detection.');
-  }
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
-function ensureTfFetchPatched() {
-  if (tfFetchPatched) return;
-  const nativeFetch = window.fetch ? window.fetch.bind(window) : undefined;
-  if (!nativeFetch) return;
-  try {
-    const platformFetch = faceapi?.tf?.env().platform?.fetch;
-    if (platformFetch !== nativeFetch) {
-      faceapi.tf.env().platform.fetch = nativeFetch;
-      tfFetchPatched = true;
-    }
-  } catch (error) {
-    console.warn('Failed to override TensorFlow.js fetch implementation.', error);
-  }
+function detectGenderFromCapture(imageData: string) {
+  genderDetectionService.detect(imageData);
 }
 
 async function sendImageToGemini() {
