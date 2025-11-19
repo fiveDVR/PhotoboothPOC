@@ -35,6 +35,7 @@ let cameraKit: any;
 let gfnb: any;
 const FACE_API_MODEL_PATH = `${import.meta.env.BASE_URL}models`;
 const genderDetectionService = new GenderDetectionService(FACE_API_MODEL_PATH);
+let detectedGender: any
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupModeSelectionUI();
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Initialize Camera Kit
 async function initCameraKit() {
   try {
-  //  await fetchGeminiKey();
+    await fetchGeminiKey();
     cameraKit = await bootstrapCameraKit({ apiToken: APP_CONFIG.CAMERA_KIT_API_TOKEN });
     cameraKitSession = await cameraKit.createSession({ liveRenderTarget: camerakitCanvas });
     // Hide loader immediately and start splash fade-out
@@ -218,7 +219,7 @@ function renderPreviewCanvas(imageData: string) {
 }
 
 function detectGenderFromCapture(imageData: string) {
-  genderDetectionService.detect(imageData);
+  genderDetectionService.detect(imageData).then((val) => { detectedGender = val; });
 }
 
 async function sendImageToGemini() {
@@ -245,7 +246,7 @@ async function sendImageToGemini() {
         {
           role: 'user',
           parts: [
-            { text: APP_CONFIG.GEMINI_IMAGE_PROMPT },
+            { text: detectedGender === 'male' ? APP_CONFIG.GEMINI_IMAGE_PROMPT_M : APP_CONFIG.GEMINI_IMAGE_PROMPT_F },
             {
               inlineData: {
                 mimeType: 'image/png',
