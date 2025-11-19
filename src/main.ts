@@ -241,6 +241,13 @@ async function sendImageToGemini() {
   const base64Payload = capturedImageData.split(',')[1];
 
   try {
+    const safetySettings = [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+    ];
+
     const request = {
       contents: [
         {
@@ -256,6 +263,7 @@ async function sendImageToGemini() {
           ]
         }
       ],
+      safetySettings,
       generationConfig: {
         imageConfig: {
           aspectRatio: '9:16'
