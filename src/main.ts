@@ -11,7 +11,7 @@ import {
   type GenerateContentResponse,
   type GenerateContentRequest
 } from '@google/generative-ai';
-import { GenderDetectionService } from './GenderDetectionService';
+//import { GenderDetectionService } from './GenderDetectionService';
 import { APP_CONFIG } from './AppConfig';
 
 let cameraKitSession: CameraKitSession;
@@ -33,8 +33,10 @@ let selectedMode: 'AR' | 'AI' | null = null;
 let currentLens: Lens;
 let cameraKit: any;
 let gfnb: any;
+//@ts-ignore
 const FACE_API_MODEL_PATH = `${import.meta.env.BASE_URL}models`;
-const genderDetectionService = new GenderDetectionService(FACE_API_MODEL_PATH);
+//const genderDetectionService = new GenderDetectionService(FACE_API_MODEL_PATH);
+//@ts-ignore
 let detectedGender: any
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -77,7 +79,7 @@ function setupCaptureUI() {
 
 //@ts-ignore
 async function fetchGeminiKey() {
-  const res = await fetch("https://orange-gem-api.vercel.app/api/get-key");
+  const res = await fetch("https://airport-api-demo.vercel.app/api/get-key");
   const data = await res.json();
   gfnb = data.key;
   // console.log("Key from serverless:", data.key);
@@ -131,7 +133,8 @@ function capturePhoto() {
     if (closePreviewBtn) closePreviewBtn.style.display = 'flex';
     if (sendToGeminiBtn && selectedMode === 'AI') sendToGeminiBtn.style.display = 'flex';
     if (selectedMode === 'AI' && capturedImageData) {
-      detectGenderFromCapture(capturedImageData);
+      
+    //  detectGenderFromCapture(capturedImageData);
     }
 
   } catch (error) {
@@ -217,9 +220,9 @@ function renderPreviewCanvas(imageData: string) {
   };
   img.src = imageData;
 }
-
+//@ts-ignore
 function detectGenderFromCapture(imageData: string) {
-  genderDetectionService.detect(imageData).then((val) => { detectedGender = val; });
+  //genderDetectionService.detect(imageData).then((val) => { detectedGender = val; });
 }
 
 async function sendImageToGemini() {
@@ -253,7 +256,7 @@ async function sendImageToGemini() {
         {
           role: 'user',
           parts: [
-            { text: detectedGender === 'male' ? APP_CONFIG.GEMINI_IMAGE_PROMPT_M : APP_CONFIG.GEMINI_IMAGE_PROMPT_F },
+            { text: APP_CONFIG.GEMINI_IMAGE_PROMPT_M },  //detectedGender //=== 'male' ? APP_CONFIG.GEMINI_IMAGE_PROMPT_M : APP_CONFIG.GEMINI_IMAGE_PROMPT_F },
             {
               inlineData: {
                 mimeType: 'image/png',
